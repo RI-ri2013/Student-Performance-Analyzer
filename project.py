@@ -1,8 +1,7 @@
 import csv
 import re
-from fileinput import filename
 from pathlib import Path
-from sys import prefix
+
 
 from tabulate import tabulate
 import statistics
@@ -102,22 +101,33 @@ def add_student():
         2. Art
         3. Commercial
         """)
-    department_choice=int(input("Select department option above: "))
+    while True:
+        try:
+           department_choice=int(input("Select department option above: "))
+           if department_choice in [1,2,3]:
+               break
+        except ValueError:
+            print("From 1-3 only")
+
+
     if department_choice==1:
-        filename="science_student.csv"
-        columns=science_columns
-        prefix="SCI"
-        department="science"
+            filename="science_student.csv"
+            colunms=science_columns
+            prefix="SCI"
+            department="science"
     elif department_choice==2:
-        filename="art_students.csv"
-        colunms=arts_columns
-        prefix = "ART"
-        department="art"
+            filename="art_students.csv"
+            colunms=arts_columns
+            prefix = "ART"
+            department="art"
     elif department_choice==3:
-        filename="commercial_students.csv"
-        colunms=commercial_columns
-        prefix = "COM"
-        department="commercial"
+            filename="commercial_students.csv"
+            colunms=commercial_columns
+            prefix = "COM"
+            department="commercial"
+    else:
+            print("incorrect enter a number between 1-3")
+
     while True:
         student_name=input("Enter student name: ").strip()
         if NAME_PATTERN.fullmatch(student_name):
@@ -142,7 +152,7 @@ def add_student():
     student_id = f"{prefix}{highest_number + 1:03d}"
 
     scores={}
-    for column in columns:
+    for column in colunms:
         if column in ["student_name","department","student_id"]:
             continue #continue means to skip
         else:
@@ -150,12 +160,16 @@ def add_student():
                 score=input(f"Enter {column}: ")
                 if column.endswith("_CA"):
                     maximum=40
+                    if score.isdigit() and 0 <= int(score) <= maximum:
+                        scores[column] = score
+                        break
+                    print("Invalid score. Please enter a valid score between 0 and 40.")
                 else:
                     maximum=60
-                if score.isdigit() and 0<=int(score)<=maximum:
-                    scores[column]=score
-                    break
-                print("Invalid score. Please enter a valid score between 0 and 40.")
+                    if score.isdigit() and 0<=int(score)<=maximum:
+                        scores[column]=score
+                        break
+                    print("Invalid score. Please enter a valid score between 0 and 60.")
     student={
         "student_id":student_id,
         "student_name":student_name,
@@ -164,37 +178,32 @@ def add_student():
     student.update(scores)
 
     with open(filename, "a", newline="") as file:
-        writer = csv.DictWriter(file, fieldnames=columns)
+        writer = csv.DictWriter(file, fieldnames=colunms)
         writer.writerow(student)
 
 
 
 
 
-def view_student():
+def view_student(filename=None):
     students = []
-    print("""
+    if filename is None:
+        print("""
             CHOOSE DEPARTMENT
             1. Science
             2. Art
             3. Commercial
             """)
-    department_choice = int(input("Select department option above: "))
-    if department_choice==1:
-        filename="science_student.csv"
-        # columns=science_columns
-        # prefix="SCI"
-        # department="science"
-    elif department_choice==2:
-        filename="art_students.csv"
-    #     colunms=arts_columns
-    #     prefix = "ART"
-    #     department="art"
-    elif department_choice==3:
-         filename="commercial_students.csv"
-    #     colunms=commercial_columns
-    #     prefix = "COM"
-    #     department="commercial"
+        department_choice = int(input("Select department option above: "))
+        if department_choice==1:
+            filename="science_student.csv"
+
+        elif department_choice==2:
+            filename="art_students.csv"
+
+        elif department_choice==3:
+            filename="commercial_students.csv"
+
 
     with open(filename,"r",newline="") as csvfile:
         reader=csv.DictReader(csvfile)
@@ -202,29 +211,31 @@ def view_student():
             students.append(row)
     return tabulate(students, headers="keys", tablefmt="grid")
 
-def view_specific_student():
+def view_specific_student(filename=None):
     print("""
                 CHOOSE DEPARTMENT
                 1. Science
                 2. Art
                 3. Commercial
                 """)
-    department_choice = int(input("Select department option above: "))
-    if department_choice == 1:
-        filename = "science_student.csv"
-        # columns=science_columns
-        # prefix="SCI"
-        # department="science"
-    elif department_choice == 2:
-        filename = "art_students.csv"
-    #     colunms=arts_columns
-    #     prefix = "ART"
-    #     department="art"
-    elif department_choice == 3:
-        filename = "commercial_students.csv"
-    #     colunms=commercial_columns
-    #     prefix = "COM"
-    #     department="commercial"
+    if filename is None:
+        while True:
+            try:
+                department_choice = int(input("Select department option above: "))
+                if department_choice not in [1,2,3]:
+                    print("Invalid department option.")
+                else:
+                    break
+            except ValueError:
+                print("Invalid department option.")
+        if department_choice == 1:
+            filename = "science_student.csv"
+        elif department_choice == 2:
+            filename = "art_students.csv"
+        elif department_choice == 3:
+            filename = "commercial_students.csv"
+
+
 
     while True:
         choice = input("Enter student's name:")
@@ -242,32 +253,37 @@ def view_specific_student():
             if row["student_name"] == choice:
                 return tabulate([row], headers="keys", tablefmt="grid")
 
-        return "Student not found"
+        return "Student not found."
 
-def calculate_average():
+def calculate_average(filename=None,columns=None):
     subject_totals = []
-    print("""
+    if filename is None:
+        print("""
                 CHOOSE DEPARTMENT
                 1. Science
                 2. Art
                 3. Commercial
                 """)
-    department_choice = int(input("Select department option above: "))
-    if department_choice == 1:
-        filename = "science_student.csv"
-        colunms=science_columns
-        # prefix="SCI"
-        # department="science"
-    elif department_choice == 2:
-        filename = "art_students.csv"
-        colunms=arts_columns
-    #     prefix = "ART"
-    #     department="art"
-    elif department_choice == 3:
-        filename = "commercial_students.csv"
-        colunms=commercial_columns
-    #     prefix = "COM"
-    #     department="commercial"
+        while True:
+            try:
+                department_choice = int(input("Select department option above: "))
+                if department_choice not in [1,2,3]:
+                    print("Invalid department option.")
+                else:
+                    break
+            except ValueError:
+                print("Invalid department option.")
+        if department_choice == 1:
+            filename = "science_student.csv"
+            columns=science_columns
+        elif department_choice == 2:
+            filename = "art_students.csv"
+            columns=arts_columns
+        elif department_choice == 3:
+            filename = "commercial_students.csv"
+            columns=commercial_columns
+
+
 
     while True:
         choic_e = input("Enter student's name: ")
@@ -284,11 +300,12 @@ def calculate_average():
     with open(filename, "r", newline="") as csvfile:
         reader = csv.DictReader(csvfile)
 
+        #for each row in the csv file,ie each row in the csv file is assigned to variable row.
         for row in reader:
 
-
+            #if the student name of that row is equal to the student name inputed
             if row["student_name"]==choic_e:
-                for column in colunms:
+                for column in columns:
                     if column.endswith("_CA"):
                         exam_column = column.replace("_CA", "_Exam")
                         total = int(row[column]) + int(row[exam_column])
@@ -299,28 +316,34 @@ def calculate_average():
                         "student_avg":[f"{overall_average:.2f}%"]},headers="keys", tablefmt="grid")
         return "Student not found"
 
-def view_class_stats():
+def view_class_stats(filename=None,columns=None):
     print("""
                     CHOOSE DEPARTMENT
                     1. Science
                     2. Arts
                     3. Commercial
                     """)
+    if filename is None:
+        while True:
+            try:
+                department_choice = int(input("Select department option above: "))
+                if department_choice not in [1,2,3]:
+                    print("Invalid department option.")
+                else:
+                    break
+            except ValueError:
+                print("Invalid department option.")
 
-    department_choice = input("Select department option above: ")
 
-    if department_choice == "1":
-        filename = "science_student.csv"
-        columns = science_columns
-    elif department_choice == "2":
-        filename = "art_students.csv"
-        columns = arts_columns
-    elif department_choice == "3":
-        filename = "commercial_students.csv"
-        columns = commercial_columns
-    else:
-        print("Invalid department option.")
-        return
+        if department_choice == 1:
+            filename = "science_student.csv"
+            columns = science_columns
+        elif department_choice == 2:
+            filename = "art_students.csv"
+            columns = arts_columns
+        elif department_choice == 3:
+            filename = "commercial_students.csv"
+            columns = commercial_columns
 
     count = 0
     avg = 0
@@ -347,9 +370,9 @@ def view_class_stats():
             avg += avg_stu
             count += 1
 
-    if count == 0:
-        print("No student records found.")
-        return
+        if count == 0:
+            return"No student records found."
+
 
     top_student = max(students, key=lambda student: student["average"])
     least_student = min(students, key=lambda student: student["average"])
